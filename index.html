@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telespor Unit Export Splitter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fffef0;
+    --card: #ffffff;
+    --border: #ebe7d6;
+    --text: #1a1a1a;
+    --text-muted: #6b716c;
+    --heading: #4f5e51;
+    --dark: #33413a;
+    --accent: #e85d1f;
+    --accent-hover: #c94e16;
+    --success-bg: #f0f7ef;
+    --success-border: #cfe3cc;
+    --success-text: #33512f;
+    --error-bg: #fbeeec;
+    --error-border: #ecc9c1;
+    --error-text: #963c22;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 0 20px 60px;
+    line-height: 1.5;
+  }
+  .container { width: 100%; max-width: 640px; }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 40px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .logo .mark {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+  }
+  .tool-badge {
+    background: var(--dark);
+    color: #ffffff;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 7px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .kicker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .kicker .dash {
+    width: 18px;
+    height: 2px;
+    background: var(--accent);
+    display: inline-block;
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--heading);
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 15px;
+    margin: 0 0 32px;
+    max-width: 46ch;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 2px rgba(51, 65, 58, 0.04);
+  }
+  .card h2 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--heading);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 16px;
+  }
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 34px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent);
+    background: #fff8f0;
+  }
+  .dropzone p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .dropzone .filename {
+    margin-top: 8px;
+    font-weight: 600;
+    color: var(--text);
+    font-size: 14px;
+  }
+  input[type="file"] { display: none; }
+  button {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #ffffff;
+    width: 100%;
+    margin-top: 20px;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled {
+    background: #e3e0cf;
+    color: #a4a696;
+    cursor: not-allowed;
+  }
+  .btn-download {
+    background: transparent;
+    color: var(--dark);
+    border: 1.5px solid var(--dark);
+  }
+  .btn-download:hover { background: var(--dark); color: #ffffff; }
+  .results { display: none; }
+  .status {
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .status.success {
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    color: var(--success-text);
+  }
+  .status.error {
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+    color: var(--error-text);
+  }
+  .file-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 0;
+    border-top: 1px solid var(--border);
+  }
+  .file-row:first-of-type { border-top: none; }
+  .file-info .name { font-weight: 700; font-size: 14px; word-break: break-all; }
+  .file-info .desc { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
+  .file-row button { flex-shrink: 0; }
+  footer {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 28px;
+  }
+  code {
+    background: #f2efe0;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 12.5px;
+  }
+
+  .manual-card { margin-bottom: 32px; }
+  .manual-note {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    color: var(--success-text);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 22px;
+  }
+  .manual-note .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success-text);
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+  .manual-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: step;
+  }
+  .manual-steps li {
+    display: flex;
+    gap: 14px;
+    counter-increment: step;
+  }
+  .manual-steps li + li { margin-top: 20px; }
+  .manual-steps li::before {
+    content: counter(step);
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--dark);
+    color: #ffffff;
+    font-size: 12.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .manual-steps .step-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .manual-steps .step-path {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .manual-steps .step-path code { margin: 0 1px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topbar">
+    <div class="logo"><span class="mark"></span>Telespor</div>
+    <div class="tool-badge">Internal tool</div>
+  </div>
+
+  <div class="kicker"><span class="dash"></span>Unit export</div>
+  <h1>Unit Export Splitter</h1>
+  <p class="subtitle">Turns a Telespor unit export CSV into a Telespor-number list and an active-sheep list, ready to download.</p>
+
+  <div class="card manual-card">
+    <h2>Manual import guide</h2>
+    <div class="manual-note">
+      <span class="dot"></span>
+      <span>For manual import, first create the user in the portal.</span>
+    </div>
+    <ol class="manual-steps">
+      <li>
+        <div>
+          <div class="step-title">Add units to the portal</div>
+          <div class="step-path">Log in as Superuser &rarr; <code>Device page</code> &rarr; <code>Registrer via CSV</code> &mdash; upload <span id="manualTelespornrName">telespornr.csv</span></div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="step-title">Impersonate the user</div>
+          <div class="step-path"><code>Enhetsliste</code> &rarr; <code>Tilknytt via CSV</code> &mdash; upload <span id="manualTelespornrName2">telespornr.csv</span></div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="step-title">Upload the individuals</div>
+          <div class="step-path"><code>Individliste</code> &rarr; <code>Last opp individer</code> &mdash; upload <span id="manualIndividualnrName">individualnr.csv</span></div>
+        </div>
+      </li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>1. Choose your export file</h2>
+    <div class="dropzone" id="dropzone">
+      <p>Drag a CSV here, or click to browse</p>
+      <div class="filename" id="filename"></div>
+      <input type="file" id="fileInput" accept=".csv">
+    </div>
+    <button class="btn-primary" id="processBtn" disabled>Process file</button>
+  </div>
+
+  <div class="card results" id="resultsCard">
+    <h2>2. Download your files</h2>
+    <div id="statusBox"></div>
+    <div class="file-row">
+      <div class="file-info">
+        <div class="name" id="telespornrName">telespornr.csv</div>
+        <div class="desc" id="telespornrDesc">Telespornr &rarr; SerialNumber, all units</div>
+      </div>
+      <button class="btn-download" id="downloadTelespornr">Download</button>
+    </div>
+    <div class="file-row">
+      <div class="file-info">
+        <div class="name" id="individualnrName">individualnr.csv</div>
+        <div class="desc" id="individualnrDesc">Individnr &rarr; Name, Telespornr &rarr; SerialNumber, Type = Sheep, ACTIVE only</div>
+      </div>
+      <button class="btn-download" id="downloadIndividualnr">Download</button>
+    </div>
+  </div>
+
+  <footer>
+    Reads semicolon-delimited exports and writes comma-delimited CSVs. Nothing is uploaded &mdash; the file is processed entirely in your browser.
+  </footer>
+</div>
+
+<script>
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const filenameEl = document.getElementById('filename');
+  const processBtn = document.getElementById('processBtn');
+  const resultsCard = document.getElementById('resultsCard');
+  const statusBox = document.getElementById('statusBox');
+  const telespornrDesc = document.getElementById('telespornrDesc');
+  const individualnrDesc = document.getElementById('individualnrDesc');
+  const telespornrNameEl = document.getElementById('telespornrName');
+  const individualnrNameEl = document.getElementById('individualnrName');
+  const manualTelespornrNameEl = document.getElementById('manualTelespornrName');
+  const manualTelespornrNameEl2 = document.getElementById('manualTelespornrName2');
+  const manualIndividualnrNameEl = document.getElementById('manualIndividualnrName');
+  const downloadTelespornrBtn = document.getElementById('downloadTelespornr');
+  const downloadIndividualnrBtn = document.getElementById('downloadIndividualnr');
+
+  let selectedFile = null;
+  let telespornrBlobUrl = null;
+  let individualnrBlobUrl = null;
+
+  // Today's date as an unambiguous, sortable filename suffix (YYYY-MM-DD),
+  // computed once so both filenames stay in sync for this page load.
+  function todaySuffix() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  const dateSuffix = todaySuffix();
+  const telespornrFilename = `telespornr_${dateSuffix}.csv`;
+  const individualnrFilename = `individualnr_${dateSuffix}.csv`;
+  telespornrNameEl.textContent = telespornrFilename;
+  individualnrNameEl.textContent = individualnrFilename;
+  manualTelespornrNameEl.textContent = telespornrFilename;
+  manualTelespornrNameEl2.textContent = telespornrFilename;
+  manualIndividualnrNameEl.textContent = individualnrFilename;
+
+  dropzone.addEventListener('click', () => fileInput.click());
+
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add('dragover');
+  });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file) {
+    selectedFile = file;
+    filenameEl.textContent = file.name;
+    processBtn.disabled = false;
+    resultsCard.style.display = 'none';
+  }
+
+  // Minimal RFC4180-ish CSV/DSV parser: handles quoted fields, escaped
+  // quotes, and CRLF/LF line endings, with a configurable delimiter.
+  function parseDsv(text, delimiter) {
+    const rows = [];
+    let row = [];
+    let field = '';
+    let inQuotes = false;
+    let i = 0;
+    const len = text.length;
+
+    while (i < len) {
+      const char = text[i];
+
+      if (inQuotes) {
+        if (char === '"') {
+          if (text[i + 1] === '"') {
+            field += '"';
+            i += 2;
+            continue;
+          }
+          inQuotes = false;
+          i++;
+          continue;
+        }
+        field += char;
+        i++;
+        continue;
+      }
+
+      if (char === '"') {
+        inQuotes = true;
+        i++;
+        continue;
+      }
+      if (char === delimiter) {
+        row.push(field);
+        field = '';
+        i++;
+        continue;
+      }
+      if (char === '\r') {
+        i++;
+        continue;
+      }
+      if (char === '\n') {
+        row.push(field);
+        rows.push(row);
+        row = [];
+        field = '';
+        i++;
+        continue;
+      }
+      field += char;
+      i++;
+    }
+    // flush trailing field/row (file may or may not end with a newline)
+    if (field.length > 0 || row.length > 0) {
+      row.push(field);
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  function parseCsvWithHeader(text, delimiter) {
+    // Strip a UTF-8 BOM if present.
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
+    const rawRows = parseDsv(text, delimiter).filter(r => !(r.length === 1 && r[0] === ''));
+    if (rawRows.length === 0) return { fields: [], data: [] };
+
+    const fields = rawRows[0].map(h => h.trim());
+    const data = rawRows.slice(1).map(cols => {
+      const obj = {};
+      fields.forEach((f, idx) => { obj[f] = cols[idx] !== undefined ? cols[idx] : ''; });
+      return obj;
+    });
+    return { fields, data };
+  }
+
+  function csvField(value) {
+    const str = value === undefined || value === null ? '' : String(value);
+    if (/[",\n\r]/.test(str)) {
+      return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+  }
+
+  function toCsv(rows) {
+    return rows.map(r => r.map(csvField).join(',')).join('\r\n') + '\r\n';
+  }
+
+  function revokeIfSet(url) {
+    if (url) URL.revokeObjectURL(url);
+  }
+
+  processBtn.addEventListener('click', () => {
+    if (!selectedFile) return;
+
+    const reader = new FileReader();
+    reader.onerror = function() {
+      showStatus('error', 'Could not read this file: ' + reader.error);
+      resultsCard.style.display = 'block';
+    };
+    reader.onload = function() {
+      try {
+        const text = reader.result;
+        const { fields, data: rows } = parseCsvWithHeader(text, ';');
+
+        const hasStatus = fields.includes('Status');
+        const hasTelespornr = fields.includes('Telespornr');
+        const hasIndividnr = fields.includes('Individnr');
+
+        if (!hasTelespornr) {
+          showStatus('error', 'Could not find a "Telespornr" column. Make sure this is a Telespor unit export CSV, semicolon-delimited.');
+          resultsCard.style.display = 'block';
+          return;
+        }
+
+        const telespornrRows = [['SerialNumber']];
+        const individualnrRows = [['Name', 'SerialNumber', 'Type']];
+        let telespornrCount = 0;
+        let individualnrCount = 0;
+
+        rows.forEach(row => {
+          const telespornr = (row['Telespornr'] || '').trim();
+          const individnr = hasIndividnr ? (row['Individnr'] || '').trim() : '';
+          const status = hasStatus ? (row['Status'] || '').trim() : '';
+
+          if (!telespornr && !individnr) return;
+
+          telespornrRows.push([telespornr]);
+          telespornrCount++;
+
+          if (status.toUpperCase() === 'ACTIVE') {
+            individualnrRows.push([individnr, telespornr, 'Sheep']);
+            individualnrCount++;
+          }
+        });
+
+        revokeIfSet(telespornrBlobUrl);
+        revokeIfSet(individualnrBlobUrl);
+
+        const telespornrBlob = new Blob([toCsv(telespornrRows)], { type: 'text/csv;charset=utf-8;' });
+        const individualnrBlob = new Blob([toCsv(individualnrRows)], { type: 'text/csv;charset=utf-8;' });
+        telespornrBlobUrl = URL.createObjectURL(telespornrBlob);
+        individualnrBlobUrl = URL.createObjectURL(individualnrBlob);
+
+        telespornrDesc.textContent = `Telespornr → SerialNumber · ${telespornrCount} units`;
+        individualnrDesc.textContent = `Name, SerialNumber, Type · ${individualnrCount} ACTIVE units`;
+
+        if (!hasStatus) {
+          showStatus('error', `No "Status" column found — ${individualnrFilename} includes all units since ACTIVE could not be checked.`);
+        } else if (!hasIndividnr) {
+          showStatus('error', `No "Individnr" column found — the Name field in ${individualnrFilename} will be blank.`);
+        } else {
+          showStatus('success', `Processed ${rows.length} rows: ${telespornrCount} units written to ${telespornrFilename}, ${individualnrCount} ACTIVE units written to ${individualnrFilename}.`);
+        }
+
+        resultsCard.style.display = 'block';
+      } catch (err) {
+        showStatus('error', 'Something went wrong while processing this file: ' + err.message);
+        resultsCard.style.display = 'block';
+      }
+    };
+    reader.readAsText(selectedFile, 'UTF-8');
+  });
+
+  function showStatus(type, message) {
+    statusBox.innerHTML = `<div class="status ${type}">${message}</div>`;
+  }
+
+  downloadTelespornrBtn.addEventListener('click', () => {
+    if (!telespornrBlobUrl) return;
+    triggerDownload(telespornrBlobUrl, telespornrFilename);
+  });
+  downloadIndividualnrBtn.addEventListener('click', () => {
+    if (!individualnrBlobUrl) return;
+    triggerDownload(individualnrBlobUrl, individualnrFilename);
+  });
+
+  function triggerDownload(url, name) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+</script>
+</body>
+</html>
